@@ -1,0 +1,32 @@
+{
+  "name": "webrtc-resource-manager",
+  "version": "0.0.1",
+  "description": "A lightweight module to allow for efficient management, creation, reuse and destruction of WebRTC DataChannels.",
+  "main": "wrtc-res-man.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FelixMcFelix/webrtc-resource-manager.git"
+  },
+  "keywords": [
+    "webrtc",
+    "manager"
+  ],
+  "author": "Kyle A. Simpson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FelixMcFelix/webrtc-resource-manager/issues"
+  },
+  "homepage": "https://github.com/FelixMcFelix/webrtc-resource-manager#readme",
+  "dependencies": {
+    "options": "0.0.6",
+    "webrtc-adapter-test": "^0.2.5"
+  },
+  "devDependencies": {
+    "chai": "^3.4.0",
+    "gulp": "^3.9.0",
+    "gulp-mocha": "^2.1.3"
+  }
+}
