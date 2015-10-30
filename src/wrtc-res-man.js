@@ -10,7 +10,7 @@ const wrtc_adapter = require("webrtc-adapter-test")
 		RESPONSE_ICE: Symbol("ICE Candidate Response"),
 		RESPONSE_SDP_REPLY: Symbol("SDP Reply Response"),
 
-		MSG_SDP: Symbol("SDP Reply Message"),
+		MSG_SDP_ANSWER: Symbol("SDP Reply Message"),
 		MSG_SDP_REQUEST: Symbol("SDP Proposal Message"),
 		MSG_ICE: Symbol("ICE Candidate Message")
 	};
@@ -56,7 +56,7 @@ function WebRTCResourceManager(config){
 	}
 
 	this.getConnection = function(id){
-		// Return an instance of a given connection by it's id.
+		// Return an instance of a given connection by its id.
 		// This shouldn't affect a connection's usages counter.
 		// TODO
 	};
@@ -70,13 +70,25 @@ function WebRTCResourceManager(config){
 
 	this.register = function(channel){
 		// Called to add a channel handler to the channel registry.
-		// Strict limit of one handler per id - duplicate entry should throw.
+		// Strict limit of one handler per id - duplicate entry should close the old before inserting the new.
 		// TODO
 	};
 }
 
 function TrackedConnection(id, rtcConn){
 	let _usages = 0;
+
+	Object.defineProperty(this, {
+		"usages": {
+			"get": () => return _usages
+		}
+	})
+
+	this.connection = rtcConn;
+
+	this.dataChannel = null;
+
+	this.openStatus = "closed";
 
 	this.close = function(){
 		// Decrement usages by 1.
@@ -92,6 +104,7 @@ module.exports = {
 	},
 
 	WebRTCResourceManager,
+	TrackedConnection,
 	signalChannels,
 	enums
 };

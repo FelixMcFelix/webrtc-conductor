@@ -1,5 +1,5 @@
 var expect = require("chai").expect,
-	resMan = require("../wrtc-res-man.js");
+	resMan = require("../src/wrtc-res-man.js");
 
 describe("WebRTCResourceManager", () => {
 
@@ -26,10 +26,10 @@ describe("WebRTCResourceManager", () => {
 			expect(fn).to.be.true;
 		});
 
-		it("should throw if trying to register another channel with the same ID", () => {
+		it("should close the old channel if trying to register another channel with the same ID", () => {
 			resManInst.register(stubChannel1);
 			var fn = () => resManInst.register(stubchannel2);
-			expect(fn).to.throw("Can't register two different channel objects with conflicting internalIds.");
+			expect(stubChannel1.closed).to.be.true;
 		});
 
 		it("should not throw if trying to register the same channel again", () => {
@@ -39,4 +39,23 @@ describe("WebRTCResourceManager", () => {
 		});
 	});
 
+
+	describe("Connection Fetching", () => {
+
+	});
+
+
+	describe("Connection Creation", () => {
+
+	});
+
+
+	describe("Response Delegation", () => {
+
+	});
+
+
+	describe("Connection Closure", () => {
+
+	});
 });

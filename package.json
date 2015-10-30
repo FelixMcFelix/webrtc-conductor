@@ -2,7 +2,7 @@
   "name": "webrtc-resource-manager",
   "version": "0.0.1",
   "description": "A lightweight module to allow for efficient management, creation, reuse and destruction of WebRTC DataChannels.",
-  "main": "wrtc-res-man.js",
+  "main": "src/wrtc-res-man.js",
   "scripts": {
     "test": "mocha"
   },
