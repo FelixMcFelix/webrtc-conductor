@@ -80,7 +80,7 @@ function TrackedConnection(id, rtcConn){
 
 	Object.defineProperty(this, {
 		"usages": {
-			"get": () => return _usages
+			"get": () => {return _usages;}
 		}
 	})
 
