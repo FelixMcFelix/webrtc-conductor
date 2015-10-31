@@ -2,16 +2,14 @@
 
 const wrtc_adapter = require("webrtc-adapter-test")
 	, Options = require("options")
-	, signalChannels = {
-		id_free: require("./example_channels/id_free.js")
-	}
 	, enums = {
 		RESPONSE_NONE: Symbol("Miscellaneous Response"),
 		RESPONSE_ICE: Symbol("ICE Candidate Response"),
-		RESPONSE_SDP_REPLY: Symbol("SDP Reply Response"),
+		RESPONSE_SDP_ANSWER: Symbol("SDP Reply Response"),
+		RESPONSE_SDP_OFFER: Symbol("SDP Offer Response"),
 
 		MSG_SDP_ANSWER: Symbol("SDP Reply Message"),
-		MSG_SDP_REQUEST: Symbol("SDP Proposal Message"),
+		MSG_SDP_OFFER: Symbol("SDP Offer Message"),
 		MSG_ICE: Symbol("ICE Candidate Message")
 	};
 
@@ -105,6 +103,5 @@ module.exports = {
 
 	WebRTCResourceManager,
 	TrackedConnection,
-	signalChannels,
 	enums
 };

@@ -20,16 +20,23 @@ module.exports = function(param){
 
 	// Function called by the manager if the _manager.response(msg, channel) method is called. This function is used to parse
 	// and handle the data actually received, and interpret what class of message has been received so that the manager can
-	// act upon the received information as needed.
-	this.onReceipt = function(msg){
+	// act upon the received information as needed. Making it so that users must call .response allows for chaining channels.
+	this.onmessage = function(msg){
 		//Where
-		//
+		//	msg is the data received along this channel.
 
 		//RETURN
-		//	{type, data}
+		//	{type, data, id}
 		//	Where
 		//		type is one of require("webrtc-adapter-test").enums belonging to "RESPONSE_*".
 		//		data is the extracted form of what was sent along the channel (the sdp response, ice candidates...)
+		//		id is the string denoting the connection which the received data is for.
+	};
+
+	// An optional function called by the manager once the channel has been bound to it.
+	// This function should be used to set up any connections or data structures which require access to the manager.
+	this.onbind = function(){
+
 	};
 
 	// Function called by the manager or application code if the channel must be closed.
