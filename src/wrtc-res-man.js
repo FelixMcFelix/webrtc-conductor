@@ -10,7 +10,10 @@ const wrtc_adapter = require("webrtc-adapter-test")
 
 		MSG_SDP_ANSWER: Symbol("SDP Reply Message"),
 		MSG_SDP_OFFER: Symbol("SDP Offer Message"),
-		MSG_ICE: Symbol("ICE Candidate Message")
+		MSG_ICE: Symbol("ICE Candidate Message"),
+
+		CHANNEL_BOUND: Symbol("Channel is bound to resource manager."),
+		CHANNEL_CLOSED: Symbol("Channel is closed.")
 	};
 
 const defaultConfig = {
@@ -21,6 +24,9 @@ const defaultConfig = {
 };
 
 function WebRTCResourceManager(config){
+	let channelRegistry = {},
+		connectionRegistry = {};
+
 	config = new Options(defaultConfig).merge(config);
 	if (!config.isDefinedAndNonNull("rtc_facade") || !config.isDefinedAndNonNull("channel")) {
 	    throw new TypeError("An 'rtc_facade' and 'channel' must be defined for WebRTC to be used.");
@@ -28,12 +34,34 @@ function WebRTCResourceManager(config){
 
 	let _lookupChannel = function(id){
 		// Takes a string id, and returns the channel matching that id.
-		// TODO
+		return channelRegistry[id];
 	},
-		_lookupConnection = function(id){
+	_insertChannel = function(channel){
+		//Place a channel object into the registry based upon its internalID.
+		channelRegistry[channel.internalID] = channel;
+	},
+	_lookupConnection = function(id){
 		// Check to see if a connection exists in the registry already.
+		return connectionRegistry[id];
+	},
+	_validateChannel = function(channel){
+		// Check to see if an object is a valid channel
 		// TODO
+		return true;
+	},
+	_bindChannel = function(channel){
+		// Bind a function to this manager object. Change its state accordingly.
+		_insertChannel(channel);
+		channel._manager = this;
+		channel.state = enums.CHANNEL_BOUND;
+	},
+	_closeChannel = function(channel){
+		// Close a channel properly, change its state.
+		channel.close();
+		channel.state = enums.CHANNEL_CLOSED;
 	}
+
+	//Public methods.
 
 	this.config = config.value;
 
@@ -50,26 +78,43 @@ function WebRTCResourceManager(config){
 	this.close = function(id){
 		// Close a connection with the given id.
 		// If you have a TrackedConnection instance you'd be better off just calling .close on that.
-		// TODO
+		_lookupChannel(id).close();
 	}
 
 	this.getConnection = function(id){
 		// Return an instance of a given connection by its id.
 		// This shouldn't affect a connection's usages counter.
-		// TODO
+		return _lookupChannel(id);
 	};
 
 	this.response = function(msg, channel){
 		// Call this function to to pass a response from a channel to the correct channel handler.
 		// channel may either be a channel object or an id - in both cases the channel object MUST
 		// be registered to the controller.
-		// TODO
+		if(typeof channel === "string"){
+			channel = _lookupChannel(channel);
+		}
+
+		if(channel === null || channel === undefined)
+			throw new Error("Channel lookup failed - id does not correspond to a registered channel instance.");
+		else if(channel._manager !== this)
+			throw new Error("Channel is not bound to this manager instance.");
+		else
+			channel.onmessage(msg);
 	};
 
 	this.register = function(channel){
 		// Called to add a channel handler to the channel registry.
 		// Strict limit of one handler per id - duplicate entry should close the old before inserting the new.
-		// TODO
+		let lookup = _lookupChannel(channel.internalID);
+
+		if(lookup && lookup !== channel)
+			_closeChannel(lookup);
+
+		if(_validateChannel(channel))
+			_bindChannel(channel);
+		else
+			throw new TypeError("The supplied channel is not of a valid format.");
 	};
 }
 
@@ -84,9 +129,18 @@ function TrackedConnection(id, rtcConn){
 
 	this.connection = rtcConn;
 
-	this.dataChannel = null;
+	this.dataChannels = {
+		__default: null
+	};
 
 	this.openStatus = "closed";
+
+	this.addDataConnection = function(name){
+		// Add another data connection onto this RTCPeerConnection.
+		// If we use a duplicate name, just take that connection instead.
+		// Return a promise.
+		// TODO
+	}
 
 	this.close = function(){
 		// Decrement usages by 1.
