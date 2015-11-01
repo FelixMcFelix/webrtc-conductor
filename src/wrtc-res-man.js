@@ -32,40 +32,44 @@ function WebRTCResourceManager(config){
 	    throw new TypeError("An 'rtc_facade' and 'channel' must be defined for WebRTC to be used.");
 	}
 
-	let _lookupChannel = function(id){
+	let _lookupChannel = id => {
 		// Takes a string id, and returns the channel matching that id.
 		return channelRegistry[id];
 	},
-	_insertChannel = function(channel){
+	_insertChannel = channel => {
 		//Place a channel object into the registry based upon its internalID.
 		channelRegistry[channel.internalID] = channel;
 	},
-	_lookupConnection = function(id){
+	_lookupConnection = id => {
 		// Check to see if a connection exists in the registry already.
 		return connectionRegistry[id];
 	},
-	_validateChannel = function(channel){
+	_validateChannel = channel => {
 		// Check to see if an object is a valid channel
-		// TODO
-		return true;
+		return (channel.internalID && typeof channel.internalID === "string")
+				&& (channel.send && typeof channel.send === "function")
+				&& (channel.onmessage && typeof channel.onmessage === "function")
+				&& (!channel.onbind || typeof channel.onbind === "function")
+				&& (!channel.onclose || typeof channel.onclose === "function");
 	},
-	_bindChannel = function(channel){
-		// Bind a function to this manager object. Change its state accordingly.
+	_bindChannel = channel => {
+		// Bind a channel to this manager object. Change its state accordingly.
 		_insertChannel(channel);
 		channel._manager = this;
 		channel.state = enums.CHANNEL_BOUND;
 	},
-	_closeChannel = function(channel){
+	_closeChannel = channel => {
 		// Close a channel properly, change its state.
-		channel.close();
+		if(channel.close)
+			channel.close();
 		channel.state = enums.CHANNEL_CLOSED;
-	}
+	};
 
 	//Public methods.
 
 	this.config = config.value;
 
-	this.connectTo = function(id, channel){
+	this.connectTo = (id, channel) => {
 		// Return an instance of a given connection by its id.
 		// This increments a connection's usage counter.
 		// If the channel supplied is an id, look it up in the registry.
@@ -75,19 +79,19 @@ function WebRTCResourceManager(config){
 		// RETURN PROMISE
 	};
 
-	this.close = function(id){
+	this.close = id => {
 		// Close a connection with the given id.
 		// If you have a TrackedConnection instance you'd be better off just calling .close on that.
-		_lookupChannel(id).close();
+		_lookupConnection(id).close();
 	}
 
-	this.getConnection = function(id){
+	this.getConnection = id => {
 		// Return an instance of a given connection by its id.
 		// This shouldn't affect a connection's usages counter.
-		return _lookupChannel(id);
+		return _lookupConnection(id);
 	};
 
-	this.response = function(msg, channel){
+	this.response = (msg, channel) => {
 		// Call this function to to pass a response from a channel to the correct channel handler.
 		// channel may either be a channel object or an id - in both cases the channel object MUST
 		// be registered to the controller.
@@ -103,7 +107,7 @@ function WebRTCResourceManager(config){
 			channel.onmessage(msg);
 	};
 
-	this.register = function(channel){
+	this.register = channel => {
 		// Called to add a channel handler to the channel registry.
 		// Strict limit of one handler per id - duplicate entry should close the old before inserting the new.
 		let lookup = _lookupChannel(channel.internalID);
