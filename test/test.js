@@ -4,7 +4,23 @@ var expect = require("chai").expect,
 describe("WebRTCResourceManager", () => {
 
 	describe("Initialisation", () => {
+		var firstChannel;
+
+		before(() => {
+			firstChannel = {
+				internalID: "first",
+				send: (a,b,c) => {},
+				onmessage: (a,b) => {}
+			};
+		});
+
 		it("should fail to initialise without a default channel", () => {
+			expect(resMan.create).to.throw(TypeError);
+		});
+
+		it("should fail to initialise with an invalid default channel", () => {
+			var conf = {channel: "valild"},
+				fn = () => resMan.create(conf);
 			expect(resMan.create).to.throw(TypeError);
 		});
 
@@ -18,6 +34,7 @@ describe("WebRTCResourceManager", () => {
 
 	describe("Channel Registration", () => {
 		var resManInst;
+		var firstChannel;
 		var stubChannel1;
 		var stubChannel2;
 
@@ -40,7 +57,13 @@ describe("WebRTCResourceManager", () => {
 		});
 
 		beforeEach(() => {
-			resManInst = resMan.create({ channel: { internalID: "init" } });
+			firstChannel = {
+				internalID: "first",
+				send: (a,b,c) => {},
+				onmessage: (a,b) => {}
+			};
+
+			resManInst = resMan.create({ channel: firstChannel });
 		});
 
 		it("should allow addition of a channel which is not present", () => {

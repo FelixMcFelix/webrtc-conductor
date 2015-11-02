@@ -3,7 +3,7 @@
 const WebSocket = require("ws")
 	, resManEnum = require("../wrtc-res-man.js").enums;
 
-module.exports = function(serverAddr){
+IDFreeChannel = function(serverAddr){
 	// Example connection to show connection over WebSockets where id is not used meaningfully.
 	// This channel is only designed to allow one connection to be opened over a WebSocket relay.
 
@@ -104,9 +104,11 @@ module.exports = function(serverAddr){
 			this._manager.response(msg, this);
 		};
 
-		safeSend({
-			type: "register"
-		});
+		ws.onopen = () => {
+			safeSend({
+				type: "register"
+			});
+		};
 	};
 
 	this.close = function(){
@@ -118,7 +120,7 @@ module.exports = function(serverAddr){
 		try{
 			ws.send(wrap(obj));
 		} catch(e){
-			log("An error occurred while sending a WebSocket datagram. Check the console (F12) for the stack trace.");
+			console.log("An error occurred while sending a WebSocket datagram. Check the console (F12) for the stack trace.");
 			console.log(e);
 		}
 	};
@@ -131,3 +133,5 @@ module.exports = function(serverAddr){
 		return JSON.parse(str);
 	};
 }
+
+module.exports = IDFreeChannel;

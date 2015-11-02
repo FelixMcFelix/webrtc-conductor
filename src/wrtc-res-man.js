@@ -1,7 +1,6 @@
 "use strict";
 
 const wrtc_adapter = require("webrtc-adapter-test")
-	, Options = require("options")
 	, enums = {
 		RESPONSE_NONE: Symbol("Miscellaneous Response"),
 		RESPONSE_ICE: Symbol("ICE Candidate Response"),
@@ -26,11 +25,6 @@ const defaultConfig = {
 function WebRTCResourceManager(config){
 	let channelRegistry = {},
 		connectionRegistry = {};
-
-	config = new Options(defaultConfig).merge(config);
-	if (!config.isDefinedAndNonNull("rtc_facade") || !config.isDefinedAndNonNull("channel")) {
-	    throw new TypeError("An 'rtc_facade' and 'channel' must be defined for WebRTC to be used.");
-	}
 
 	let _lookupChannel = id => {
 		// Takes a string id, and returns the channel matching that id.
@@ -57,17 +51,49 @@ function WebRTCResourceManager(config){
 		_insertChannel(channel);
 		channel._manager = this;
 		channel.state = enums.CHANNEL_BOUND;
+		if(channel.onbind)
+			channel.onbind();
 	},
 	_closeChannel = channel => {
 		// Close a channel properly, change its state.
 		if(channel.close)
 			channel.close();
 		channel.state = enums.CHANNEL_CLOSED;
+	},
+	_channelFromObjectOrId = channel => {
+		if(typeof channel === "string"){
+			channel = _lookupChannel(channel);
+		}
+
+		if(channel === null || channel === undefined)
+			throw new Error("Channel lookup failed - id does not correspond to a registered channel instance.");
+		else if(channel._manager !== this)
+			throw new Error("Channel is not bound to this manager instance.");
+		else
+			return channel;
+
+		return null;
+	},
+	_validateConfig = config => {
+		return (config.channel && _validateChannel(config.channel))
+				&& (config.rtc_facade && typeof config.rtc_facade === "object")
+				&& (config.rtc_config && typeof config.rtc_config === "object");
+	},
+	_mergeConfig = config => {
+		let out = {};
+		
+		for(var propName in defaultConfig)
+			if(defaultConfig.hasOwnProperty(propName))
+				out[propName] = defaultConfig[propName];
+
+		for(var propName in config)
+			if(config.hasOwnProperty(propName) && (out[propName] === null || out[propName] === undefined))
+				out[propName] = config[propName];
+
+		return out;
 	};
 
 	//Public methods.
-
-	this.config = config.value;
 
 	this.connectTo = (id, channel) => {
 		// Return an instance of a given connection by its id.
@@ -75,8 +101,26 @@ function WebRTCResourceManager(config){
 		// If the channel supplied is an id, look it up in the registry.
 		//		If it has been bound to this, use it. If bound to another manager, throw.
 		// 		Otherwise, add it to the registry if it has yet to be bound.
-		// TODO
-		// RETURN PROMISE
+		if(!channel)
+			channel = this.config.channel;
+		else{
+			try{
+				channel = _channelFromObjectOrId(channel);
+			} catch (e){
+				if(channel.state === enums.CHANNEL_BOUND || channel.state === enums.CHANNEL_CLOSED)
+					throw e;
+				else
+					this.register(channel);
+			}
+		}
+
+		let conn = new this.config.rtc_facade.RTCPeerConnection();
+
+		console.log(conn);
+
+		return new Promise(
+			(resolve, reject) => {}
+		);
 	};
 
 	this.close = id => {
@@ -95,16 +139,26 @@ function WebRTCResourceManager(config){
 		// Call this function to to pass a response from a channel to the correct channel handler.
 		// channel may either be a channel object or an id - in both cases the channel object MUST
 		// be registered to the controller.
-		if(typeof channel === "string"){
-			channel = _lookupChannel(channel);
-		}
+		let input = _channelFromObjectOrId(channel).onmessage(msg);
 
-		if(channel === null || channel === undefined)
-			throw new Error("Channel lookup failed - id does not correspond to a registered channel instance.");
-		else if(channel._manager !== this)
-			throw new Error("Channel is not bound to this manager instance.");
-		else
-			channel.onmessage(msg);
+		switch(input.type){
+			case(enums.RESPONSE_NONE):
+				break;
+			case(enums.RESPONSE_ICE):
+				//TODO
+				console.log("ICE candidate picked up by manager.")
+				break;
+			case(enums.RESPONSE_SDP_OFFER):
+				//TODO
+				console.log("SDP offer picked up by manager.")
+				break;
+			case(enums.RESPONSE_SDP_ANSWER):
+				//TODO
+				console.log("SDP answer picked up by manager.")
+				break;
+			default:
+				throw new Error("Illegal input type sent as response to ");
+		}
 	};
 
 	this.register = channel => {
@@ -120,7 +174,18 @@ function WebRTCResourceManager(config){
 		else
 			throw new TypeError("The supplied channel is not of a valid format.");
 	};
+
+	// Initialisation code
+
+	this.config = _mergeConfig(config);
+
+	if(!_validateConfig(this.config))
+		throw new TypeError("An 'rtc_facade', 'rtc_config' and 'channel' must be defined for WebRTC to be used.");
+
+	this.register(this.config.channel);
 }
+
+
 
 function TrackedConnection(id, rtcConn){
 	let _usages = 0;
