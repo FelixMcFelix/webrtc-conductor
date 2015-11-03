@@ -38,6 +38,10 @@ function WebRTCResourceManager(config){
 		// Check to see if a connection exists in the registry already.
 		return connectionRegistry[id];
 	},
+	_insertConnection = (id, connection) => {
+		//Place a Connection object into the registry based upon its internalID.
+		connectionRegistry[id] = connection;
+	},
 	_validateChannel = channel => {
 		// Check to see if an object is a valid channel
 		return (channel.internalID && typeof channel.internalID === "string")
@@ -101,6 +105,9 @@ function WebRTCResourceManager(config){
 		// If the channel supplied is an id, look it up in the registry.
 		//		If it has been bound to this, use it. If bound to another manager, throw.
 		// 		Otherwise, add it to the registry if it has yet to be bound.
+
+		debugger;
+
 		if(!channel)
 			channel = this.config.channel;
 		else{
@@ -114,9 +121,28 @@ function WebRTCResourceManager(config){
 			}
 		}
 
-		let conn = new this.config.rtc_facade.RTCPeerConnection();
+		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
+			trConn = new TrackedConnection(id, conn);
 
-		console.log(conn);
+		_insertConnection(id, trConn);
+
+		conn.onicecandidate = function(evt) {
+			console.log(evt);
+			channel.send(id, resManEnum.MSG_ICE, evt.candidate);
+		}
+
+		let dataChan = conn.createDataChannel("__default", null);
+
+		dataChan.onopen = ()=>{console.log("a")};
+		dataChan.onclose = ()=>{console.log("b")};
+		dataChan.onerror = ()=>{console.log("c")};
+		dataChan.onmessage = ()=>{console.log("d")};
+
+		conn.createOffer({})
+			.then(
+				result => {debugger; channel.send(id, enums.MSG_SDP_OFFER, result)},
+				reason => console.log(reason)
+			);
 
 		return new Promise(
 			(resolve, reject) => {}
@@ -139,25 +165,43 @@ function WebRTCResourceManager(config){
 		// Call this function to to pass a response from a channel to the correct channel handler.
 		// channel may either be a channel object or an id - in both cases the channel object MUST
 		// be registered to the controller.
-		let input = _channelFromObjectOrId(channel).onmessage(msg);
+		channel = _channelFromObjectOrId(channel);
+
+		let input = channel.onmessage(msg),
+			target = _lookupConnection(input.id),
+			data = input.data;
 
 		switch(input.type){
 			case(enums.RESPONSE_NONE):
 				break;
 			case(enums.RESPONSE_ICE):
-				//TODO
-				console.log("ICE candidate picked up by manager.")
+				console.log("ICE candidate picked up by manager.");
+				target.connection.addIceCandidate(new RTCIceCandidate(data))
+					.then(
+					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
+					  	reason => console.log("Unsuccessful in adding ICE candidate to connection "+input.id+": "+reason)
+					);
 				break;
 			case(enums.RESPONSE_SDP_OFFER):
-				//TODO
 				console.log("SDP offer picked up by manager.")
+				target.connection.setRemoteDescription(new RTCSessionDescription(data))
+					.then(target.connection.createAnswer)
+					.then(target.connection.setLocalDescription)
+					.then(
+						result => channel.send(input.id, enums.MSG_SDP_ANSWER, result),
+						reason => {throw new Error("Failed to respond to SDP offer: "+reason);}
+					);
 				break;
 			case(enums.RESPONSE_SDP_ANSWER):
-				//TODO
-				console.log("SDP answer picked up by manager.")
+				console.log("SDP answer picked up by manager.");
+				target.connection.setRemoteDescription(new RTCSessionDescription(data))
+				.then(
+					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
+					  	reason => console.log("Unsuccessful in adding ICE candidate to connection "+input.id+": "+reason)
+					);
 				break;
 			default:
-				throw new Error("Illegal input type sent as response to ");
+				throw new Error("Illegal input type sent as response to connection driver.");
 		}
 	};
 
@@ -188,13 +232,13 @@ function WebRTCResourceManager(config){
 
 
 function TrackedConnection(id, rtcConn){
-	let _usages = 0;
+	// let _usages = 0;
 
-	Object.defineProperty(this, {
-		"usages": {
-			"get": () => {return _usages;}
-		}
-	})
+	// Object.defineProperty(this, {
+	// 	"usages": {
+	// 		"get": () => {return _usages;}
+	// 	}
+	// })
 
 	this.connection = rtcConn;
 
