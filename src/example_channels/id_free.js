@@ -46,7 +46,8 @@ IDFreeChannel = function(serverAddr){
 
 		let obj = {
 			type: null,
-			data
+			data,
+			id
 		};
 
 		switch(type){
@@ -70,7 +71,7 @@ IDFreeChannel = function(serverAddr){
 
 	this.onmessage = function(msg){
 		var obj = unwrap(msg.data);
-		var out = {type: null, data: obj.data, id: myCurrId};
+		var out = {type: null, data: obj.data, id: obj.id};
 
 		switch(obj.type){
 			case "beginExchange":
@@ -100,15 +101,29 @@ IDFreeChannel = function(serverAddr){
 	};
 
 	this.onbind = function(){
-		ws.onmessage = (msg) => {
-			this._manager.response(msg, this);
-		};
+		// ws.onmessage = (msg) => {
+		// 	this._manager.response(msg, this);
+		// };
+
+		let t = this;
 
 		ws.onopen = () => {
 			safeSend({
 				type: "register"
 			});
 		};
+
+		return new Promise((resolve, reject) => {
+			ws.onmessage = function(msg){
+				t._manager.response(msg, t);
+
+				ws.onmessage = (msg) => {
+					t._manager.response(msg, t);
+				};
+
+				resolve(selected);
+			}
+		});
 	};
 
 	this.close = function(){

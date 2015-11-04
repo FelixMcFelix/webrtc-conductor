@@ -34,6 +34,19 @@ function WebRTCResourceManager(config){
 		//Place a channel object into the registry based upon its internalID.
 		channelRegistry[channel.internalID] = channel;
 	},
+	_newConnection = (id, channel) => {
+		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
+			trConn = new TrackedConnection(id, conn);
+
+		_insertConnection(id, trConn);
+
+		conn.onicecandidate = function(evt) {
+			if(evt.candidate)
+				channel.send(id, enums.MSG_ICE, evt.candidate);
+		}
+
+		return trConn;
+	},
 	_lookupConnection = id => {
 		// Check to see if a connection exists in the registry already.
 		return connectionRegistry[id];
@@ -55,8 +68,17 @@ function WebRTCResourceManager(config){
 		_insertChannel(channel);
 		channel._manager = this;
 		channel.state = enums.CHANNEL_BOUND;
-		if(channel.onbind)
-			channel.onbind();
+
+		let onbindresult;
+		if(channel.onbind){
+			onbindresult = channel.onbind();
+		}
+
+		if(!(onbindresult instanceof Promise))
+			channel._ready = Promise.resolve(true);
+		else
+			channel._ready = onbindresult;
+
 	},
 	_closeChannel = channel => {
 		// Close a channel properly, change its state.
@@ -106,54 +128,71 @@ function WebRTCResourceManager(config){
 		//		If it has been bound to this, use it. If bound to another manager, throw.
 		// 		Otherwise, add it to the registry if it has yet to be bound.
 
-		debugger;
+		let look = _lookupConnection(id),
+			prom;
 
-		if(!channel)
-			channel = this.config.channel;
-		else{
-			try{
-				channel = _channelFromObjectOrId(channel);
-			} catch (e){
-				if(channel.state === enums.CHANNEL_BOUND || channel.state === enums.CHANNEL_CLOSED)
-					throw e;
-				else
-					this.register(channel);
+		if(!look){
+			if(!channel)
+				channel = this.config.channel;
+			else{
+				try{
+					channel = _channelFromObjectOrId(channel);
+				} catch (e){
+					if(channel.state === enums.CHANNEL_BOUND || channel.state === enums.CHANNEL_CLOSED)
+						throw e;
+					else
+						this.register(channel);
+				}
 			}
+	
+			look = _newConnection(id, channel);
+	
+			let dataChan = look.connection.createDataChannel("__default", null);
+	
+			dataChan.onopen = ()=>{console.log("a")};
+			dataChan.onclose = ()=>{console.log("b")};
+			dataChan.onerror = ()=>{console.log("c")};
+			dataChan.onmessage = ()=>{console.log("d")};
+	
+			channel._ready
+				.then(result => {
+					if(result)
+						return look.connection.createOffer({});
+					else
+						return new Promise((res,rej)=>{rej("Channel failed to become ready for connection or is not allowing outbound offers.");})
+				})
+				// .then(look.connection.setLocalDescription)
+				.then((res) => {
+						console.log(res)
+						console.log(look);
+						return look.connection.setLocalDescription(res)
+					},
+					(reason)=>console.log(reason))
+				.then(
+					result => {
+						channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);
+					},
+					reason => console.log(reason)
+				);
+
+			prom = new Promise((resolve,reject)=>{
+
+			});
+
+		} else {
+			prom = new Promise((resolve, reject)=>{
+				resolve(look);
+			});
 		}
 
-		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
-			trConn = new TrackedConnection(id, conn);
-
-		_insertConnection(id, trConn);
-
-		conn.onicecandidate = function(evt) {
-			console.log(evt);
-			channel.send(id, resManEnum.MSG_ICE, evt.candidate);
-		}
-
-		let dataChan = conn.createDataChannel("__default", null);
-
-		dataChan.onopen = ()=>{console.log("a")};
-		dataChan.onclose = ()=>{console.log("b")};
-		dataChan.onerror = ()=>{console.log("c")};
-		dataChan.onmessage = ()=>{console.log("d")};
-
-		conn.createOffer({})
-			.then(
-				result => {debugger; channel.send(id, enums.MSG_SDP_OFFER, result)},
-				reason => console.log(reason)
-			);
-
-		return new Promise(
-			(resolve, reject) => {}
-		);
+		return prom;
 	};
 
 	this.close = id => {
 		// Close a connection with the given id.
 		// If you have a TrackedConnection instance you'd be better off just calling .close on that.
 		_lookupConnection(id).close();
-	}
+	};
 
 	this.getConnection = id => {
 		// Return an instance of a given connection by its id.
@@ -167,15 +206,21 @@ function WebRTCResourceManager(config){
 		// be registered to the controller.
 		channel = _channelFromObjectOrId(channel);
 
+		// debugger;
+
 		let input = channel.onmessage(msg),
 			target = _lookupConnection(input.id),
 			data = input.data;
+
+		if(!target && input.id)
+			target = _newConnection(input.id, channel);
 
 		switch(input.type){
 			case(enums.RESPONSE_NONE):
 				break;
 			case(enums.RESPONSE_ICE):
 				console.log("ICE candidate picked up by manager.");
+				console.log(data);
 				target.connection.addIceCandidate(new RTCIceCandidate(data))
 					.then(
 					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
@@ -185,10 +230,19 @@ function WebRTCResourceManager(config){
 			case(enums.RESPONSE_SDP_OFFER):
 				console.log("SDP offer picked up by manager.")
 				target.connection.setRemoteDescription(new RTCSessionDescription(data))
-					.then(target.connection.createAnswer)
-					.then(target.connection.setLocalDescription)
+					.then((res) => {
+						console.log(res)
+						return target.connection.createAnswer()
+					},
+					(reason)=>console.log(reason))
+					// .then(target.connection.setLocalDescription)
+					.then((res) => {
+						console.log(res)
+						return target.connection.setLocalDescription(res)
+					},
+					(reason)=>console.log(reason))
 					.then(
-						result => channel.send(input.id, enums.MSG_SDP_ANSWER, result),
+						result => channel.send(input.id, enums.MSG_SDP_ANSWER, target.connection.localDescription),
 						reason => {throw new Error("Failed to respond to SDP offer: "+reason);}
 					);
 				break;
@@ -196,8 +250,8 @@ function WebRTCResourceManager(config){
 				console.log("SDP answer picked up by manager.");
 				target.connection.setRemoteDescription(new RTCSessionDescription(data))
 				.then(
-					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
-					  	reason => console.log("Unsuccessful in adding ICE candidate to connection "+input.id+": "+reason)
+					  	result => console.log("Successfully added SDP Answer to connection "+input.id),
+					  	reason => console.log("Unsuccessful in adding SDP Answer to connection "+input.id+": "+reason)
 					);
 				break;
 			default:

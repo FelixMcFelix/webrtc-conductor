@@ -34,7 +34,9 @@ module.exports = function(param){
 	};
 
 	// An optional function called by the manager once the channel has been bound to it.
-	// This function should be used to set up any connections or data structures which require access to the manager.
+	// This function should be used to set up any connections or data structures which require access to the manager,
+	// and may return either a void value or a promise indicating when the channel may be safely used to create new
+	// connections.
 	this.onbind = function(){
 
 	};
