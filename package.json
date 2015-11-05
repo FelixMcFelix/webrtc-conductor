@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/FelixMcFelix/webrtc-resource-manager#readme",
   "dependencies": {
-    "webrtc-adapter-test": "^0.2.5"
+    "webrtc-adapter-test": "git+https://github.com/FelixMcFelix/adapter.git"
   },
   "devDependencies": {
     "chai": "^3.4.0",

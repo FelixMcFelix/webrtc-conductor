@@ -45,6 +45,10 @@ function WebRTCResourceManager(config){
 				channel.send(id, enums.MSG_ICE, evt.candidate);
 		}
 
+		conn.ondatachannel = function(evt){
+			trConn.registerDataChannel(evt.channel);
+		}
+
 		return trConn;
 	},
 	_lookupConnection = id => {
@@ -102,7 +106,10 @@ function WebRTCResourceManager(config){
 	},
 	_validateConfig = config => {
 		return (config.channel && _validateChannel(config.channel))
-				&& (config.rtc_facade && typeof config.rtc_facade === "object")
+				&& (config.rtc_facade && typeof config.rtc_facade === "object"
+					&& config.rtc_facade.RTCPeerConnection && typeof config.rtc_facade.RTCPeerConnection === "function"
+					&& config.rtc_facade.RTCIceCandidate && typeof config.rtc_facade.RTCIceCandidate === "function"
+					&& config.rtc_facade.RTCSessionDescription && typeof config.rtc_facade.RTCSessionDescription === "function")
 				&& (config.rtc_config && typeof config.rtc_config === "object");
 	},
 	_mergeConfig = config => {
@@ -149,34 +156,24 @@ function WebRTCResourceManager(config){
 	
 			let dataChan = look.connection.createDataChannel("__default", null);
 	
-			dataChan.onopen = ()=>{console.log("a")};
-			dataChan.onclose = ()=>{console.log("b")};
-			dataChan.onerror = ()=>{console.log("c")};
-			dataChan.onmessage = ()=>{console.log("d")};
-	
 			channel._ready
 				.then(result => {
 					if(result)
 						return look.connection.createOffer({});
 					else
-						return new Promise((res,rej)=>{rej("Channel failed to become ready for connection or is not allowing outbound offers.");})
+						return new Promise((res,rej)=>{rej("Channel failed to become ready for connection or is not allowing outbound offers.");});
 				})
-				// .then(look.connection.setLocalDescription)
-				.then((res) => {
-						console.log(res)
-						console.log(look);
-						return look.connection.setLocalDescription(res)
-					},
-					(reason)=>console.log(reason))
+				.then(result => {
+					return look.connection.setLocalDescription(result);
+				})
 				.then(
-					result => {
-						channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);
-					},
+					result => {channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);},
 					reason => console.log(reason)
 				);
 
 			prom = new Promise((resolve,reject)=>{
-
+				dataChan.onopen = () => resolve(look);
+				dataChan.onerror = err => reject(err);
 			});
 
 		} else {
@@ -206,8 +203,6 @@ function WebRTCResourceManager(config){
 		// be registered to the controller.
 		channel = _channelFromObjectOrId(channel);
 
-		// debugger;
-
 		let input = channel.onmessage(msg),
 			target = _lookupConnection(input.id),
 			data = input.data;
@@ -221,7 +216,7 @@ function WebRTCResourceManager(config){
 			case(enums.RESPONSE_ICE):
 				console.log("ICE candidate picked up by manager.");
 				console.log(data);
-				target.connection.addIceCandidate(new RTCIceCandidate(data))
+				target.connection.addIceCandidate(new this.config.rtc_facade.RTCIceCandidate(data))
 					.then(
 					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
 					  	reason => console.log("Unsuccessful in adding ICE candidate to connection "+input.id+": "+reason)
@@ -229,18 +224,13 @@ function WebRTCResourceManager(config){
 				break;
 			case(enums.RESPONSE_SDP_OFFER):
 				console.log("SDP offer picked up by manager.")
-				target.connection.setRemoteDescription(new RTCSessionDescription(data))
+				target.connection.setRemoteDescription(new this.config.rtc_facade.RTCSessionDescription(data))
 					.then((res) => {
-						console.log(res)
 						return target.connection.createAnswer()
-					},
-					(reason)=>console.log(reason))
-					// .then(target.connection.setLocalDescription)
+					})
 					.then((res) => {
-						console.log(res)
 						return target.connection.setLocalDescription(res)
-					},
-					(reason)=>console.log(reason))
+					})
 					.then(
 						result => channel.send(input.id, enums.MSG_SDP_ANSWER, target.connection.localDescription),
 						reason => {throw new Error("Failed to respond to SDP offer: "+reason);}
@@ -248,7 +238,7 @@ function WebRTCResourceManager(config){
 				break;
 			case(enums.RESPONSE_SDP_ANSWER):
 				console.log("SDP answer picked up by manager.");
-				target.connection.setRemoteDescription(new RTCSessionDescription(data))
+				target.connection.setRemoteDescription(new this.config.rtc_facade.RTCSessionDescription(data))
 				.then(
 					  	result => console.log("Successfully added SDP Answer to connection "+input.id),
 					  	reason => console.log("Unsuccessful in adding SDP Answer to connection "+input.id+": "+reason)
@@ -294,6 +284,8 @@ function TrackedConnection(id, rtcConn){
 	// 	}
 	// })
 
+	this.id = id;
+
 	this.connection = rtcConn;
 
 	this.dataChannels = {
@@ -302,19 +294,32 @@ function TrackedConnection(id, rtcConn){
 
 	this.openStatus = "closed";
 
-	this.addDataConnection = function(name){
+	this.addDataConnection = name => {
 		// Add another data connection onto this RTCPeerConnection.
 		// If we use a duplicate name, just take that connection instead.
 		// Return a promise.
-		// TODO
-	}
+		let dChan = this.dataChannels[name];
+		if(!dChan){
+			this.dataChannels[name] = this.connection.createDataChannel(name, null);
+			dChan = this.dataChannels[name];
+		}
+
+		return new Promise((resolve, reject) => {
+			dChan.onopen = () => {resolve(dChan)};
+			dChan.onerror = err => reject(err);
+		});
+	};
+
+	this.registerDataChannel = (dChan) => {
+		this.dataChannels[dChan.label] = dChan;
+	};
 
 	this.close = function(){
 		// Decrement usages by 1.
 		// If _usages hits zero, place a timeout function to kill this item if it gains no more users
 		// before TTL
 		// TODO
-	}
+	};
 }
 
 module.exports = {
