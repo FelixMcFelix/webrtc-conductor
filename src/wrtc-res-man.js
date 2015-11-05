@@ -106,10 +106,7 @@ function WebRTCResourceManager(config){
 	},
 	_validateConfig = config => {
 		return (config.channel && _validateChannel(config.channel))
-				&& (config.rtc_facade && typeof config.rtc_facade === "object"
-					&& config.rtc_facade.RTCPeerConnection && typeof config.rtc_facade.RTCPeerConnection === "function"
-					&& config.rtc_facade.RTCIceCandidate && typeof config.rtc_facade.RTCIceCandidate === "function"
-					&& config.rtc_facade.RTCSessionDescription && typeof config.rtc_facade.RTCSessionDescription === "function")
+				&& (config.rtc_facade && typeof config.rtc_facade === "object")
 				&& (config.rtc_config && typeof config.rtc_config === "object");
 	},
 	_mergeConfig = config => {
