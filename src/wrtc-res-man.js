@@ -34,7 +34,7 @@ function WebRTCResourceManager(config){
 		//Place a channel object into the registry based upon its internalID.
 		channelRegistry[channel.internalID] = channel;
 	},
-	_newConnection = (id, channel) => {
+	_newConnection = (id, channel, response) => {
 		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
 			trConn = new TrackedConnection(id, conn);
 
@@ -46,8 +46,14 @@ function WebRTCResourceManager(config){
 		}
 
 		conn.ondatachannel = function(evt){
+			console.log("Received Channel from other partner.")
+			console.log(trConn.dataChannels.__default)
+			console.log(evt.channel)
 			trConn.registerDataChannel(evt.channel);
 		}
+
+		if(response)
+			_fireOnConnected(conn);
 
 		return trConn;
 	},
@@ -121,6 +127,10 @@ function WebRTCResourceManager(config){
 				out[propName] = config[propName];
 
 		return out;
+	},
+	_fireOnConnected = (conn) => {
+		if(this.onconnection)
+			this.onconnection(conn);
 	};
 
 	//Public methods.
@@ -151,12 +161,15 @@ function WebRTCResourceManager(config){
 	
 			look = _newConnection(id, channel);
 	
-			let dataChan = look.connection.createDataChannel("__default", null);
+			// let dataChan = look.connection.createDataChannel("__default", null);
+			let dataChan = {};
 	
-			channel._ready
+			let ready = channel._ready
 				.then(result => {
-					if(result)
+					if(result){
+						dataChan = look.addDataChannel("__default");
 						return look.connection.createOffer({});
+					}
 					else
 						return new Promise((res,rej)=>{rej("Channel failed to become ready for connection or is not allowing outbound offers.");});
 				})
@@ -164,13 +177,25 @@ function WebRTCResourceManager(config){
 					return look.connection.setLocalDescription(result);
 				})
 				.then(
-					result => {channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);},
-					reason => console.log(reason)
+					result => {
+						channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);
+						return true;
+					},
+					reason => {
+						console.log(reason);
+						return false;
+					}
 				);
 
 			prom = new Promise((resolve,reject)=>{
-				dataChan.onopen = () => resolve(look);
-				dataChan.onerror = err => reject(err);
+				// dataChan.then(
+				// 	result => resolve(look),
+				// 	reason => reject(reason)
+				// );
+				// if(ready){
+					dataChan.onopen = () => resolve(look);
+					dataChan.onerror = err => reject(err);
+				// }
 			});
 
 		} else {
@@ -205,7 +230,7 @@ function WebRTCResourceManager(config){
 			data = input.data;
 
 		if(!target && input.id)
-			target = _newConnection(input.id, channel);
+			target = _newConnection(input.id, channel, true);
 
 		switch(input.type){
 			case(enums.RESPONSE_NONE):
@@ -260,6 +285,8 @@ function WebRTCResourceManager(config){
 			throw new TypeError("The supplied channel is not of a valid format.");
 	};
 
+	this.onconnection = undefined;
+
 	// Initialisation code
 
 	this.config = _mergeConfig(config);
@@ -281,6 +308,22 @@ function TrackedConnection(id, rtcConn){
 	// 	}
 	// })
 
+	let _lookupExisting = label => {
+		let look;
+
+		if(label)
+			look = this.dataChannels[label];
+		else
+			look = this.dataChannels.__default;
+
+		if(!look)
+			throw new Error(label ? "No such data channel for label "+label+"."
+				: "No default channel present to send data."
+			);
+
+		return look;
+	};
+
 	this.id = id;
 
 	this.connection = rtcConn;
@@ -289,33 +332,51 @@ function TrackedConnection(id, rtcConn){
 		__default: null
 	};
 
-	this.openStatus = "closed";
+	// this.openStatus = "closed";
 
-	this.addDataConnection = name => {
+	this.addDataChannel = label => {
 		// Add another data connection onto this RTCPeerConnection.
-		// If we use a duplicate name, just take that connection instead.
+		// If we use a duplicate label, just take that connection instead.
 		// Return a promise.
-		let dChan = this.dataChannels[name];
+		let dChan = this.dataChannels[label];
 		if(!dChan){
-			this.dataChannels[name] = this.connection.createDataChannel(name, null);
-			dChan = this.dataChannels[name];
+			this.registerDataChannel(this.connection.createDataChannel(label, null));
+			dChan = this.dataChannels[label];
 		}
 
-		return new Promise((resolve, reject) => {
-			dChan.onopen = () => {resolve(dChan)};
-			dChan.onerror = err => reject(err);
-		});
+		return dChan;
 	};
 
 	this.registerDataChannel = (dChan) => {
+		// let prom = new Promise((resolve, reject) => {
+		// 	dChan.onopen = () => {resolve(dChan)};
+		// 	dChan.onerror = err => reject(err);
+		// 	dChan.onmessage = (msg) => console.log("MESSAGE: "+msg)
+		// });
+
 		this.dataChannels[dChan.label] = dChan;
+
+		// return prom;
+		return dChan;
 	};
 
-	this.close = function(){
+	this.send = (msg, label) => {
+		_lookupExisting(label)
+		// .then(result => result.send(msg));
+		.send(msg)
+	};
+
+	this.close = () => {
 		// Decrement usages by 1.
 		// If _usages hits zero, place a timeout function to kill this item if it gains no more users
 		// before TTL
 		// TODO
+	};
+
+	this.on = (event, handler, label) => {
+		debugger;
+		_lookupExisting(label)["on"+event] = handler
+		// .then(result => {console.log(result);result["on"+event] = handler;console.log(result.onmessage);});
 	};
 }
 

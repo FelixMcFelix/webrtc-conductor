@@ -30,7 +30,7 @@ module.exports = function(param){
 		//	Where
 		//		type is one of require("webrtc-adapter-test").enums belonging to "RESPONSE_*".
 		//		data is the extracted form of what was sent along the channel (the sdp response, ice candidates...)
-		//		id is the string denoting the connection which the received data is for.
+		//		id is the string denoting the connection which the received data is for (the identity of the sender).
 	};
 
 	// An optional function called by the manager once the channel has been bound to it.
@@ -38,7 +38,8 @@ module.exports = function(param){
 	// and may return either a void value or a promise indicating when the channel may be safely used to create new
 	// connections.
 	this.onbind = function(){
-
+		//RETURN
+		//	Promise<Boolean> or void
 	};
 
 	// Function called by the manager or application code if the channel must be closed.
