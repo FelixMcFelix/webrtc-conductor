@@ -17,6 +17,6 @@ gulp.task("test", function(){
 })
 
 gulp.task("doc", function(){
-	gulp.src(config.srcDir+"**/*.js")
+	gulp.src(config.srcDir+"*.js")
 		.pipe(jsdoc(config.docDir));
 });
