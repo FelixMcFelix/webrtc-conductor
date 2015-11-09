@@ -99,7 +99,11 @@ describe("WebRTC Conductor", () => {
 		beforeEach(() => {
 			manager = resMan.create({
 				rtc_facade: wrtc,
-				channel: null // TODO
+				channel: {
+					internalID: "stub",
+					send: (a,b,c) => {},
+					onmessage: (a,b) => {}
+				} // TODO
 			});
 		});
 
