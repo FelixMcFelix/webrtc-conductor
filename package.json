@@ -1,6 +1,6 @@
 {
   "name": "webrtc-conductor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A lightweight module to allow for efficient management, creation, reuse and destruction of WebRTC DataChannels.",
   "main": "src/wrtc-res-man.js",
   "scripts": {
