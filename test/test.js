@@ -87,6 +87,48 @@ describe("WebRTC Conductor", () => {
 			var fn = () => resManInst.register(badChannel);;
 			expect(fn).to.throw(Error);
 		});
+
+	});
+
+	describe("Connection Renaming", () => {
+		var resManInst;
+		var firstChannel;
+		
+		var conn;
+
+		beforeEach(() => {
+			firstChannel = {
+				internalID: "first",
+				send: (a,b,c) => {},
+				onmessage: (a,b) => {}
+			};
+
+			resManInst = resMan.create({ channel: firstChannel });
+		});
+
+		it("should allow renaming a defined connection to an unused name", () => {
+			var val = {test: "prop"};
+			resManInst._connectionRegistry["initial"] = val;
+
+			resManInst.renameConnection("initial", "final");
+
+			expect(resManInst._connectionRegistry["final"]===val && resManInst._connectionRegistry["inital"]===undefined).to.be.true;
+		});
+
+		it("should throw if either connection name is not a string when renaming", () => {
+			expect(()=>{resManInst.renameConnection(null, "aName");}).to.throw(TypeError);
+		});
+
+		it("should throw if the first connection is not defined when renaming", () => {
+			expect(()=>{resManInst.renameConnection("initial", "final");}).to.throw(ReferenceError);
+		});
+
+		it("should throw if the second connection is defined when renaming", () => {
+			var val = {test: "prop"};
+			resManInst._connectionRegistry["final"] = val;
+
+			expect(()=>{resManInst.renameConnection("initial", "final");}).to.throw(ReferenceError);
+		});
 	});
 
 	describe("Active Connections", () => {

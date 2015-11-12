@@ -23,16 +23,16 @@ const defaultConfig = {
 };
 
 function WebRTCResourceManager(config){
-	let channelRegistry = {},
-		connectionRegistry = {};
+	this._channelRegistry = {};
+	this._connectionRegistry = {};
 
 	let _lookupChannel = id => {
 		// Takes a string id, and returns the channel matching that id.
-		return channelRegistry[id];
+		return this._channelRegistry[id];
 	},
 	_insertChannel = channel => {
 		//Place a channel object into the registry based upon its internalID.
-		channelRegistry[channel.internalID] = channel;
+		this._channelRegistry[channel.internalID] = channel;
 	},
 	_newConnection = (id, channel, response) => {
 		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
@@ -59,11 +59,11 @@ function WebRTCResourceManager(config){
 	},
 	_lookupConnection = id => {
 		// Check to see if a connection exists in the registry already.
-		return connectionRegistry[id];
+		return this._connectionRegistry[id];
 	},
 	_insertConnection = (id, connection) => {
 		//Place a Connection object into the registry based upon its internalID.
-		connectionRegistry[id] = connection;
+		this._connectionRegistry[id] = connection;
 	},
 	_validateChannel = channel => {
 		// Check to see if an object is a valid channel
@@ -284,6 +284,18 @@ function WebRTCResourceManager(config){
 		else
 			throw new TypeError("The supplied channel is not of a valid format.");
 	};
+
+	this.renameConnection = (oldName, newName) => {
+		if(!(typeof oldName === "string" && typeof newName === "string"))
+			throw new TypeError("Invalid parameters for renameConnection - one or both are not of type \"string\".");
+		if(!this._connectionRegistry[oldName])
+			throw new ReferenceError("Invalid parameter for old name at renameConnection - no corresponding connection exists.");
+		if(this._connectionRegistry[newName])
+			throw new ReferenceError("Error for new name at renameConnection - connection of name "+newName+" already exists.");
+
+		this._connectionRegistry[newName] = this._connectionRegistry[oldName]
+		delete this._connectionRegistry[oldName];
+	}
 
 	this.onconnection = undefined;
 
