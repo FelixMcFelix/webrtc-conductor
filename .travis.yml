@@ -8,6 +8,10 @@ language: cpp
 node_js:
   - "4.1"
 
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y python2.7 git-all pkg-config libncurses5-dev libssl-dev libnss3-dev libexpat-dev
+
 before_script:
   - npm install -g gulp
   - npm install

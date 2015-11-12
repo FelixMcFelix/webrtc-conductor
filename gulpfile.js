@@ -1,6 +1,6 @@
 const gulp = require("gulp")
 	, mocha = require("gulp-mocha")
-	, jsdoc = require("gulp-jsdoc")
+	// , jsdoc = require("gulp-jsdoc")
 	, config = {
 		testDir: "./test/*.js",
 		srcDir: "./src/",
@@ -17,6 +17,6 @@ gulp.task("test", function(){
 })
 
 gulp.task("doc", function(){
-	gulp.src(config.srcDir+"*.js")
-		.pipe(jsdoc(config.docDir));
+	// gulp.src(config.srcDir+"*.js")
+	// 	.pipe(jsdoc(config.docDir));
 });
