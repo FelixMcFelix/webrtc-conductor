@@ -1,4 +1,4 @@
-# WebRTC Conductor [![Build Status](https://travis-ci.org/FelixMcFelix/webrtc-conductor.svg)](https://travis-ci.org/FelixMcFelix/webrtc-conductor)
+# WebRTC Conductor [![Build Status](https://travis-ci.org/FelixMcFelix/webrtc-conductor.svg)](https://travis-ci.org/FelixMcFelix/webrtc-conductor) [![Code Climate](https://codeclimate.com/github/FelixMcFelix/webrtc-conductor/badges/gpa.svg)](https://codeclimate.com/github/FelixMcFelix/webrtc-conductor)
 A lightweight ES6 module to allow for efficient and simple management, creation, reuse and destruction of WebRTC DataChannels - independent of the signalling channel used for negotiation.
 
 Presently, the module is extremely unstable and is functional up to the point where I can use it with a small amount of difficulty in my projects. Over time, I will fix and extend this module as needed.
