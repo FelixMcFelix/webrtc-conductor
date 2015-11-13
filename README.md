@@ -26,3 +26,66 @@ myConductor.connectTo(/* String containing your partner's id. */)
     }
   );
 ```
+
+## Channels
+Although these are properly detailed in src/example_channels/structure_example.js, a rough description is as follows:
+
+```javascript
+function FooChannel(param){
+	// A reference to the bound manager.
+	// You may call:
+	//	_manager.response(msg, channel):			alert the manager that a response 
+	//												has been received, and delegate
+	//												parsing it to the given channel.
+	//
+	//	_manager.renameConnection(name1, name2):	inform the manager that it must
+	//												change a channel's name - typically
+	//												used for bootstrapping into a
+	//												P2P network.
+	this._manager = null;
+
+	// Internal ID used by the registry of the manager to help find
+	// registered channels by name.
+	this.internalID = "structure_example";
+
+	// Function called by manager when opening a new WebRTC Data Channel. This function
+	// is used to convert webrtc negotiation details into a form suitable for the
+	// channel, as well as sending this information along the channel.
+	this.send = function(id, type, data){
+		/*...*/
+	};
+
+	// Function called by the manager if the _manager.response(msg, channel)
+	// method is called. This function is used to parse and handle the data
+	// actually received, and interpret what class of message has been received.
+	this.onmessage = function(msg){
+		/*...*/
+	};
+
+	// An optional function called by the manager once the channel has been bound to it.
+	this.onbind = function(){
+		/*...*/
+	};
+
+	// Function called by the manager or application code if the channel must be closed.
+	// All cleanup and related logic should be handled here so that open connections
+	// are not left inaccessible by the program.
+	this.close = function(){
+		/* ... */
+	};
+}
+```
+
+If you are implementing your own channel, I strongly recommend referring to the specification document to be aware of expected return
+types, further conventions and so on.
+
+## Changelog
+
+***Note: Breaking changes will regularly occur before v1.0.0 due to instability of the library. Use at your own risk!***
+
+### 0.1.0
+* Addition of .renameConnection() method for channels to use in cases where the destination is not yet known.
+* Addition of .onconnection property, called when a channel is opened to the current user from another source.
+
+### 0.0.1
+* Initial Implementation
