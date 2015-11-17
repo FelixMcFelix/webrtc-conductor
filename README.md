@@ -83,6 +83,12 @@ types, further conventions and so on.
 
 ***Note: Breaking changes will regularly occur before v1.0.0 due to instability of the library. Use at your own risk!***
 
+### 0.1.2
+* Change of dependencies to get webrtc-adapter-test from the official git now that API changes have been merged.
+
+### 0.1.1
+* Removal of wrtc as an optional dependency.
+
 ### 0.1.0
 * Addition of .renameConnection() method for channels to use in cases where the destination is not yet known.
 * Addition of .onconnection property, called when a channel is opened to the current user from another source.
