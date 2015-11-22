@@ -83,6 +83,9 @@ types, further conventions and so on.
 
 ***Note: Breaking changes will regularly occur before v1.0.0 due to instability of the library. Use at your own risk!***
 
+### 0.1.3
+* Addition of simple .close() method on connections. This closes a connection for real, and is not intelligently managed.
+
 ### 0.1.2
 * Change of dependencies to get webrtc-adapter-test from the official git now that API changes have been merged.
 

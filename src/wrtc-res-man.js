@@ -382,7 +382,9 @@ function TrackedConnection(id, rtcConn){
 		// Decrement usages by 1.
 		// If _usages hits zero, place a timeout function to kill this item if it gains no more users
 		// before TTL
-		// TODO
+		// TODO - closes for real right now.
+
+		this.connection.close();
 	};
 
 	this.on = (event, handler, label) => {
