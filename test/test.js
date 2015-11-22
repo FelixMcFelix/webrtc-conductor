@@ -131,7 +131,7 @@ describe("WebRTC Conductor", () => {
 		});
 	});
 
-	describe("Active Connections", () => {
+	// describe("Active Connections", () => {
 	// 	var wrtc, manager;
 
 	// 	before("check to see if we have a usable webrtc stack", ()=>{
