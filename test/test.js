@@ -132,109 +132,109 @@ describe("WebRTC Conductor", () => {
 	});
 
 	describe("Active Connections", () => {
-		var wrtc, manager;
+	// 	var wrtc, manager;
 
-		before("check to see if we have a usable webrtc stack", ()=>{
-			wrtc = require("wrtc");
-		});
+	// 	before("check to see if we have a usable webrtc stack", ()=>{
+	// 		wrtc = require("wrtc");
+	// 	});
 
-		beforeEach(() => {
-			manager = resMan.create({
-				rtc_facade: wrtc,
-				channel: {
-					internalID: "stub",
-					send: (a,b,c) => {},
-					onmessage: (a,b) => {}
-				} // TODO
-			});
-		});
+	// 	beforeEach(() => {
+	// 		manager = resMan.create({
+	// 			rtc_facade: wrtc,
+	// 			channel: {
+	// 				internalID: "stub",
+	// 				send: (a,b,c) => {},
+	// 				onmessage: (a,b) => {}
+	// 			} // TODO
+	// 		});
+	// 	});
 
-		describe("Connection Creation", () => {
-			it("should call the onconnection handler if a connection is opened by another client", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 	describe("Connection Creation", () => {
+	// 		it("should call the onconnection handler if a connection is opened by another client", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should return the TrackedConnection instance as part of the promise after .connectTo(...)", () => {
-				//TODO
-				expect(true).false;
-			});
-		});
+	// 		it("should return the TrackedConnection instance as part of the promise after .connectTo(...)", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
+	// 	});
 
-		describe("Connection Fetching", () => {
-			it("should return the connection with a matching name if one exists", () => {
-				//TODO
-				expect(true).false;
-			});
-		});
+	// 	describe("Connection Fetching", () => {
+	// 		it("should return the connection with a matching name if one exists", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
+	// 	});
 
-		describe("Data Channel Management", () => {
-			it("should register a new datachannel when prompted by partner", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 	describe("Data Channel Management", () => {
+	// 		it("should register a new datachannel when prompted by partner", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should close and overwrite the datachannel if one with a duplicate name is registered", () => {
-				//TODO
-				expect(true).false;
-			});
-		});
+	// 		it("should close and overwrite the datachannel if one with a duplicate name is registered", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
+	// 	});
 
-		describe("Connection Usage", ()=>{
-			it("should send along the default channel when calling send on a TrackedConnection", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 	describe("Connection Usage", ()=>{
+	// 		it("should send along the default channel when calling send on a TrackedConnection", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should send along the specified channel when calling send with a label on a TrackedConnection", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 		it("should send along the specified channel when calling send with a label on a TrackedConnection", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should set event handlers on the default connection when no label is specified", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 		it("should set event handlers on the default connection when no label is specified", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should set event handlers on the specified connection when a label is specified", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 		it("should set event handlers on the specified connection when a label is specified", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should fire the onmessage event if the partner sends a message", () => {
-				//TODO
-				expect(true).false;
-			});
-		});
+	// 		it("should fire the onmessage event if the partner sends a message", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
+	// 	});
 
-		describe("Response Delegation", () => {
-			it("should pass down the chain of response handlers for several connected singalling channels", () => {
-				//TODO
-				expect(true).false;
-			});
-		});
+	// 	describe("Response Delegation", () => {
+	// 		it("should pass down the chain of response handlers for several connected singalling channels", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
+	// 	});
 
-		describe("Connection Closure", () => {
-			it("should decrement a connection's usage count on .close()", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 	describe("Connection Closure", () => {
+	// 		it("should decrement a connection's usage count on .close()", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should increment a connection's usage count on .connectTo()", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 		it("should increment a connection's usage count on .connectTo()", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should close a connection after TTL once usages=0 on both sides of the connection", () => {
-				//TODO
-				expect(true).false;
-			});
+	// 		it("should close a connection after TTL once usages=0 on both sides of the connection", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
 
-			it("should not close a connection if it remains in use on one side", () => {
-				//TODO
-				expect(true).false;
-			});
-		});
+	// 		it("should not close a connection if it remains in use on one side", () => {
+	// 			//TODO
+	// 			expect(true).false;
+	// 		});
+	// 	});
 		
-	});
+	// });
 });
