@@ -83,6 +83,9 @@ types, further conventions and so on.
 
 ***Note: Breaking changes will regularly occur before v1.0.0 due to instability of the library. Use at your own risk!***
 
+### 0.1.4
+* Fixes #4, where configs did not correctly merge. This allows serverside applications to work as intended now.
+
 ### 0.1.3
 * Addition of simple .close() method on connections. This closes a connection for real, and is not intelligently managed.
 
