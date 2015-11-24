@@ -35,11 +35,6 @@ function WebRTCResourceManager(config){
 		this._channelRegistry[channel.internalID] = channel;
 	},
 	_newConnection = (id, channel, response) => {
-		console.log("Inside Conductor:")
-		console.log(this)
-		console.log(this.config)
-		console.log(this.config.rtc_facade)
-
 		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
 			trConn = new TrackedConnection(id, conn);
 
@@ -305,11 +300,7 @@ function WebRTCResourceManager(config){
 	this.onconnection = undefined;
 
 	// Initialisation code
-
-	console.log("WRTC input config:")
-	console.log(config)
 	this.config = _mergeConfig(defaultConfig, config);
-	console.log(this.config)
 
 	if(!_validateConfig(this.config))
 		throw new TypeError("An 'rtc_facade', 'rtc_config' and 'channel' must be defined for WebRTC to be used.");
