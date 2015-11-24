@@ -35,6 +35,11 @@ function WebRTCResourceManager(config){
 		this._channelRegistry[channel.internalID] = channel;
 	},
 	_newConnection = (id, channel, response) => {
+		console.log("Inside Conductor:")
+		console.log(this)
+		console.log(this.config)
+		console.log(this.config.rtc_facade)
+
 		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
 			trConn = new TrackedConnection(id, conn);
 
