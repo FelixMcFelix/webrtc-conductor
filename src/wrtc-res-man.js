@@ -120,16 +120,16 @@ function WebRTCResourceManager(config){
 				&& (config.rtc_facade && typeof config.rtc_facade === "object")
 				&& (config.rtc_config && typeof config.rtc_config === "object");
 	},
-	_mergeConfig = config => {
+	_mergeConfig = (config1, config2)=>{
 		let out = {};
 		
-		for(var propName in defaultConfig)
-			if(defaultConfig.hasOwnProperty(propName))
-				out[propName] = defaultConfig[propName];
+		for(var propName in config1)
+			if(config1.hasOwnProperty(propName))
+				out[propName] = config1[propName];
 
-		for(var propName in config)
-			if(config.hasOwnProperty(propName) && (out[propName] === null || out[propName] === undefined))
-				out[propName] = config[propName];
+		for(var propName in config2)
+			if(config2.hasOwnProperty(propName))
+				out[propName] = config2[propName];
 
 		return out;
 	},
@@ -308,7 +308,7 @@ function WebRTCResourceManager(config){
 
 	console.log("WRTC input config:")
 	console.log(config)
-	this.config = _mergeConfig(config);
+	this.config = _mergeConfig(defaultConfig, config);
 	console.log(this.config)
 
 	if(!_validateConfig(this.config))
