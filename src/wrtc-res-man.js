@@ -306,7 +306,10 @@ function WebRTCResourceManager(config){
 
 	// Initialisation code
 
+	console.log("WRTC input config:")
+	console.log(config)
 	this.config = _mergeConfig(config);
+	console.log(this.config)
 
 	if(!_validateConfig(this.config))
 		throw new TypeError("An 'rtc_facade', 'rtc_config' and 'channel' must be defined for WebRTC to be used.");
