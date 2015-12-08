@@ -47,8 +47,6 @@ function WebRTCResourceManager(config){
 
 		conn.ondatachannel = function(evt){
 			console.log("Received Channel from other partner.")
-			console.log(trConn.dataChannels.__default)
-			console.log(evt.channel)
 			trConn.registerDataChannel(evt.channel);
 		}
 
@@ -237,7 +235,6 @@ function WebRTCResourceManager(config){
 				break;
 			case(enums.RESPONSE_ICE):
 				console.log("ICE candidate picked up by manager.");
-				console.log(data);
 				target.connection.addIceCandidate(new this.config.rtc_facade.RTCIceCandidate(data))
 					.then(
 					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
@@ -286,6 +283,7 @@ function WebRTCResourceManager(config){
 	};
 
 	this.renameConnection = (oldName, newName) => {
+		console.log("Renaming channel "+oldName+" to "+newName+".")
 		if(!(typeof oldName === "string" && typeof newName === "string"))
 			throw new TypeError("Invalid parameters for renameConnection - one or both are not of type \"string\".");
 		if(!this._connectionRegistry[oldName])
