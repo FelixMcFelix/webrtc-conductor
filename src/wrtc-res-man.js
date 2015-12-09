@@ -47,8 +47,6 @@ function WebRTCResourceManager(config){
 
 		conn.ondatachannel = function(evt){
 			console.log("Received Channel from other partner.")
-			console.log(trConn.dataChannels.__default)
-			console.log(evt.channel)
 			trConn.registerDataChannel(evt.channel);
 		}
 
@@ -161,41 +159,42 @@ function WebRTCResourceManager(config){
 	
 			look = _newConnection(id, channel);
 	
-			// let dataChan = look.connection.createDataChannel("__default", null);
-			let dataChan = {};
-	
-			let ready = channel._ready
-				.then(result => {
-					if(result){
-						dataChan = look.addDataChannel("__default");
-						return look.connection.createOffer({});
-					}
-					else
-						return new Promise((res,rej)=>{rej("Channel failed to become ready for connection or is not allowing outbound offers.");});
-				})
-				.then(result => {
-					return look.connection.setLocalDescription(result);
-				})
-				.then(
-					result => {
-						channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);
-						return true;
-					},
-					reason => {
-						console.log(reason);
-						return false;
-					}
-				);
-
 			prom = new Promise((resolve,reject)=>{
-				// dataChan.then(
-				// 	result => resolve(look),
-				// 	reason => reject(reason)
-				// );
-				// if(ready){
-					dataChan.onopen = () => resolve(look);
-					dataChan.onerror = err => reject(err);
-				// }
+				let dataChan = {};
+		
+				let ready = channel._ready
+					.then(result => {
+						if(result){
+							dataChan = look.addDataChannel("__default");
+							return look.connection.createOffer({});
+						}
+						else
+							return new Promise((res,rej)=>{rej("Channel failed to become ready for connection or is not allowing outbound offers.");});
+					})
+					.then(result => {
+						return look.connection.setLocalDescription(result);
+					})
+					.then(
+						result => {
+							channel.send(id, enums.MSG_SDP_OFFER, look.connection.localDescription);
+							return true;
+						},
+						reason => {
+							console.log(reason);
+							return false;
+						}
+					);
+
+				console.log(ready);
+
+				ready.then(val => {
+					if(val){
+						dataChan.onopen = () => resolve(look);
+						dataChan.onerror = err => reject(err);
+					} else {
+						reject("Cannot create new data channel - connection channel is not alllowing outbound offers.")
+					}
+				})
 			});
 
 		} else {
@@ -237,7 +236,6 @@ function WebRTCResourceManager(config){
 				break;
 			case(enums.RESPONSE_ICE):
 				console.log("ICE candidate picked up by manager.");
-				console.log(data);
 				target.connection.addIceCandidate(new this.config.rtc_facade.RTCIceCandidate(data))
 					.then(
 					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
@@ -293,7 +291,10 @@ function WebRTCResourceManager(config){
 		if(this._connectionRegistry[newName])
 			throw new ReferenceError("Error for new name at renameConnection - connection of name "+newName+" already exists.");
 
-		this._connectionRegistry[newName] = this._connectionRegistry[oldName]
+		let item = this._connectionRegistry[oldName];
+		this._connectionRegistry[newName] = item;
+		item.id = newName;
+
 		delete this._connectionRegistry[oldName];
 	}
 

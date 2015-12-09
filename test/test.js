@@ -129,6 +129,15 @@ describe("WebRTC Conductor", () => {
 
 			expect(()=>{resManInst.renameConnection("initial", "final");}).to.throw(ReferenceError);
 		});
+
+		it("should ensure that the id field of the connection is changed", () => {
+			var val = {test: "prop"};
+			resManInst._connectionRegistry["initial"] = val;
+
+			resManInst.renameConnection("initial", "final");
+
+			expect(resManInst._connectionRegistry["final"].id).to.equal("final");
+		});
 	});
 
 	// describe("Active Connections", () => {
