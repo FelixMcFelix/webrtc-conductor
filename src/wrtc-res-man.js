@@ -51,7 +51,7 @@ function WebRTCResourceManager(config){
 		}
 
 		if(response)
-			_fireOnConnected(conn);
+			_fireOnConnected(trConn);
 
 		return trConn;
 	},
@@ -368,9 +368,15 @@ function TrackedConnection(id, rtcConn){
 
 		this.dataChannels[dChan.label] = dChan;
 
+		if(this.ondatachannel){
+			this.ondatachannel(dChan);
+		}
+
 		// return prom;
 		return dChan;
 	};
+
+	this.ondatachannel = undefined;
 
 	this.send = (msg, label) => {
 		_lookupExisting(label)
