@@ -50,6 +50,19 @@ function WebRTCResourceManager(config){
 			trConn.registerDataChannel(evt.channel);
 		}
 
+		conn.oniceconnectionstatechange = function(evt) {
+			switch(evt.type){
+				case "closed":
+					if (trConn.onclose)
+						trConn.onclose(evt);
+				case "disconnected":
+					if (trConn.ondisconnect)
+						trConn.ondisconnect(evt);
+					break;
+			}
+		}
+
+
 		if(response)
 			_fireOnConnected(trConn);
 
@@ -376,7 +389,9 @@ function TrackedConnection(id, rtcConn){
 		return dChan;
 	};
 
-	this.ondatachannel = undefined;
+	this.onclose = null;
+	this.ondatachannel = null;
+	this.ondisconnect = null;
 
 	this.send = (msg, label) => {
 		_lookupExisting(label)
