@@ -51,15 +51,16 @@ function WebRTCResourceManager(config){
 		}
 
 		conn.oniceconnectionstatechange = function(evt) {
-			switch(evt.type){
+			switch(evt.target.iceConnectionState){
 				case "closed":
 					if (trConn.onclose)
 						trConn.onclose(evt);
+				case "failed":
 				case "disconnected":
 					if (trConn.ondisconnect)
 						trConn.ondisconnect(evt);
 					break;
-			}
+			}		
 		}
 
 
