@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/FelixMcFelix/webrtc-conductor#readme",
   "dependencies": {
-    "webrtc-adapter-test": "git+https://github.com/webrtc/adapter.git"
+    "webrtc-adapter-test": "^0.2.8"
   },
   "devDependencies": {
     "chai": "^3.4.0",
