@@ -87,6 +87,7 @@ types, further conventions and so on.
 * Added "onclose" event, which responds to EXPLICIT REQUESTS TO CLOSE THE CONNECTION. If you want a riskier metric (which will catch failures but may report false positives), then use "ondisconnect".
 * Added "ondatachannel" event to tracked connection objects, this should fire when a data channel is added to a connection - in particular, when a received connection becomes ready for use.
 * Added "ondisconnect" event to tracked connection objects, this should fire when a connection to another client terminates (either deliberately or on browser/node exit).
+* Successive calls to .connectTo() will return the promise that was supplied on the first count.
 
 ### 0.1.4
 * Fixes #4, where configs did not correctly merge. This allows serverside applications to work as intended now.

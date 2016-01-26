@@ -211,10 +211,10 @@ function WebRTCResourceManager(config){
 				})
 			});
 
+			look._promise = prom;
+
 		} else {
-			prom = new Promise((resolve, reject)=>{
-				resolve(look);
-			});
+			prom = look._promise;
 		}
 
 		return prom;
