@@ -4,7 +4,7 @@ A lightweight ES6 module to allow for efficient and simple management, creation,
 Presently, the module is extremely unstable and is functional up to the point where I can use it with a small amount of difficulty in my projects. Over time, I will fix and extend this module as needed.
 
 ## Overview
-One of the main goals of this library is to decouple the signalling channel used to initialise WebRTC connections from the management library itself - a move that I'm surprised no other library appears to have taken.
+One of the main goals of this library is to decouple the signalling channel used to initialise WebRTC connections from the management library itself - a move that I'm surprised no other library appears to have taken a transport-agnostic approach like this.
 
 To connect to another peer:
 ```javascript
@@ -83,9 +83,15 @@ types, further conventions and so on.
 
 ***Note: Breaking changes will regularly occur before v1.0.0 due to instability of the library. Use at your own risk!***
 
+### 0.1.5
+* Added "onclose" event, which responds to EXPLICIT REQUESTS TO CLOSE THE CONNECTION. If you want a riskier metric (which will catch failures but may report false positives), then use "ondisconnect".
+* Added "ondatachannel" event to tracked connection objects, this should fire when a data channel is added to a connection - in particular, when a received connection becomes ready for use.
+* Added "ondisconnect" event to tracked connection objects, this should fire when a connection to another client terminates (either deliberately or on browser/node exit).
+* Successive calls to .connectTo() will return the promise that was supplied on the first count.
+
 ### 0.1.4
 * Fixes #4, where configs did not correctly merge. This allows serverside applications to work as intended now.
-* Fixes #2, #3. These bugs both resulted from incorrect handling of resources and promises.
+* Fixes #2, #6. These bugs both resulted from incorrect handling of resources and promises.
 
 ### 0.1.3
 * Addition of simple .close() method on connections. This closes a connection for real, and is not intelligently managed.

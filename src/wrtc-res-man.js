@@ -50,8 +50,22 @@ function WebRTCResourceManager(config){
 			trConn.registerDataChannel(evt.channel);
 		}
 
+		conn.oniceconnectionstatechange = function(evt) {
+			switch(this.iceConnectionState){
+				case "closed":
+					if (trConn.onclose)
+						trConn.onclose(evt);
+				case "failed":
+				case "disconnected":
+					if (trConn.ondisconnect)
+						trConn.ondisconnect(evt);
+					break;
+			}		
+		}
+
+
 		if(response)
-			_fireOnConnected(conn);
+			_fireOnConnected(trConn);
 
 		return trConn;
 	},
@@ -197,10 +211,10 @@ function WebRTCResourceManager(config){
 				})
 			});
 
+			look._promise = prom;
+
 		} else {
-			prom = new Promise((resolve, reject)=>{
-				resolve(look);
-			});
+			prom = look._promise;
 		}
 
 		return prom;
@@ -368,9 +382,17 @@ function TrackedConnection(id, rtcConn){
 
 		this.dataChannels[dChan.label] = dChan;
 
+		if(this.ondatachannel){
+			this.ondatachannel(dChan);
+		}
+
 		// return prom;
 		return dChan;
 	};
+
+	this.onclose = null;
+	this.ondatachannel = null;
+	this.ondisconnect = null;
 
 	this.send = (msg, label) => {
 		_lookupExisting(label)
