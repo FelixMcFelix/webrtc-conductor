@@ -36,7 +36,8 @@ function WebRTCResourceManager(config){
 	},
 	_newConnection = (id, channel, response) => {
 		let conn = new this.config.rtc_facade.RTCPeerConnection(this.config.rtc_config),
-			trConn = new TrackedConnection(id, conn);
+			trConn = new TrackedConnection(id, conn),
+			t = this;
 
 		_insertConnection(id, trConn);
 
@@ -59,7 +60,7 @@ function WebRTCResourceManager(config){
 				case "disconnected":
 					if (trConn.ondisconnect)
 						trConn.ondisconnect(evt);
-					delete this._connectionRegistry[trConn.id];
+					delete t._connectionRegistry[trConn.id];
 					break;
 			}		
 		}
