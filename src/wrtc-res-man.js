@@ -59,6 +59,7 @@ function WebRTCResourceManager(config){
 				case "disconnected":
 					if (trConn.ondisconnect)
 						trConn.ondisconnect(evt);
+					delete this._connectionRegistry[trConn.id];
 					break;
 			}		
 		}

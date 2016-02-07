@@ -83,6 +83,9 @@ types, further conventions and so on.
 
 ***Note: Breaking changes will regularly occur before v1.0.0 due to instability of the library. Use at your own risk!***
 
+### 0.1.6
+* Disconnection now removes nodes from internal store - they should no longer be found by .connectTo() calls on their ID.
+
 ### 0.1.5
 * Added "onclose" event, which responds to EXPLICIT REQUESTS TO CLOSE THE CONNECTION. If you want a riskier metric (which will catch failures but may report false positives), then use "ondisconnect".
 * Added "ondatachannel" event to tracked connection objects, this should fire when a data channel is added to a connection - in particular, when a received connection becomes ready for use.
