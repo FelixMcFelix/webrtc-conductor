@@ -51,16 +51,23 @@ function WebRTCResourceManager(config){
 			trConn.registerDataChannel(evt.channel);
 		}
 
+		let disconnectFired = false;
+
 		conn.oniceconnectionstatechange = function(evt) {
 			switch(this.iceConnectionState){
 				case "closed":
+					if(disconnectFired)
+						return;
 					if (trConn.onclose)
 						trConn.onclose(evt);
 				case "failed":
 				case "disconnected":
+					if(disconnectFired)
+						return;
 					if (trConn.ondisconnect)
 						trConn.ondisconnect(evt);
 					delete t._connectionRegistry[trConn.id];
+					disconnectFired = true;
 					break;
 			}		
 		}

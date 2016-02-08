@@ -85,6 +85,7 @@ types, further conventions and so on.
 
 ### 0.1.6
 * Disconnection now removes nodes from internal store - they should no longer be found by .connectTo() calls on their ID.
+* Changes to disconnect events so that they only fire ONCE per connection.
 
 ### 0.1.5
 * Added "onclose" event, which responds to EXPLICIT REQUESTS TO CLOSE THE CONNECTION. If you want a riskier metric (which will catch failures but may report false positives), then use "ondisconnect".
