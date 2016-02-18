@@ -184,6 +184,7 @@ function WebRTCResourceManager(config){
 	
 			prom = new Promise((resolve,reject)=>{
 				let dataChan = {};
+				look._reject = reject;
 		
 				let ready = channel._ready
 					.then(result => {
@@ -216,6 +217,7 @@ function WebRTCResourceManager(config){
 						dataChan.onerror = err => reject(err);
 					} else {
 						reject("Cannot create new data channel - connection channel is not alllowing outbound offers.")
+						look.close();
 					}
 				})
 			});
@@ -321,6 +323,17 @@ function WebRTCResourceManager(config){
 		delete this._connectionRegistry[oldName];
 	}
 
+	this.reject = (name, reason) => {
+		if(!(typeof name === "string"))
+			throw new TypeError("Invalid parameters for reject - name is not of type \"string\".");
+
+		let item = this._connectionRegistry[name];
+		if (item) {
+			item._reject(reason);
+			item.close();
+		}
+	}
+
 	this.onconnection = undefined;
 
 	// Initialisation code
@@ -419,7 +432,6 @@ function TrackedConnection(id, rtcConn){
 	};
 
 	this.on = (event, handler, label) => {
-		debugger;
 		_lookupExisting(label)["on"+event] = handler
 		// .then(result => {console.log(result);result["on"+event] = handler;console.log(result.onmessage);});
 	};
