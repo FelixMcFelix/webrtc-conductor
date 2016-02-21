@@ -88,6 +88,7 @@ types, further conventions and so on.
 * Changes to disconnect events so that they only fire ONCE per connection.
 * Channels can now call conductor.rejct(id, reason) to reject a connection in progress.
 * Removal of unnecessary debugger keyword when setting event handlers.
+* connectTo() calls will now timeout - defaults to never, but can be user configured to reject after a given time.
 
 ### 0.1.5
 * Added "onclose" event, which responds to EXPLICIT REQUESTS TO CLOSE THE CONNECTION. If you want a riskier metric (which will catch failures but may report false positives), then use "ondisconnect".

@@ -17,6 +17,7 @@ const wrtc_adapter = require("webrtc-adapter-test")
 
 const defaultConfig = {
 	channel: null,
+	timeout: 0,
 	conn_ttl: 10000,
 	rtc_facade: wrtc_adapter,
 	rtc_config: { iceServers: [{urls: ["stun:stun.l.google.com:19302", "stun:stun.ekiga.net"] }] }
@@ -48,6 +49,7 @@ function WebRTCResourceManager(config){
 
 		conn.ondatachannel = function(evt){
 			console.log("Received Channel from other partner.")
+			clearTimeout(trConn._rejectTimeout);
 			trConn.registerDataChannel(evt.channel);
 		}
 
@@ -71,6 +73,9 @@ function WebRTCResourceManager(config){
 					break;
 			}		
 		}
+
+		if (this.config.timeout !== 0)
+			trConn._rejectTimeout = setTimeout(()=>{trConn.reject(`[Conductor] Couldn't open WebRTC connection "${trConn.id}" - timed out.`)}, this.config.timeout);
 
 
 		if(response)
@@ -213,7 +218,10 @@ function WebRTCResourceManager(config){
 
 				ready.then(val => {
 					if(val){
-						dataChan.onopen = () => resolve(look);
+						dataChan.onopen = () => {
+							clearTimeout(look._rejectTimeout);
+							resolve(look);
+						};
 						dataChan.onerror = err => reject(err);
 					} else {
 						reject("Cannot create new data channel - connection channel is not alllowing outbound offers.")
@@ -328,10 +336,8 @@ function WebRTCResourceManager(config){
 			throw new TypeError("Invalid parameters for reject - name is not of type \"string\".");
 
 		let item = this._connectionRegistry[name];
-		if (item) {
-			item._reject(reason);
-			item.close();
-		}
+		if (item)
+			item.reject(reason);
 	}
 
 	this.onconnection = undefined;
@@ -430,6 +436,13 @@ function TrackedConnection(id, rtcConn){
 
 		this.connection.close();
 	};
+
+	this.reject = reason => {
+		if(this._reject && ) {
+			this._reject(reason);
+			this.close();
+		}
+	}
 
 	this.on = (event, handler, label) => {
 		_lookupExisting(label)["on"+event] = handler
