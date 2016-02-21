@@ -438,7 +438,7 @@ function TrackedConnection(id, rtcConn){
 	};
 
 	this.reject = reason => {
-		if(this._reject && ) {
+		if(this._reject) {
 			this._reject(reason);
 			this.close();
 		}
