@@ -20,7 +20,10 @@ const defaultConfig = {
 	timeout: 0,
 	conn_ttl: 10000,
 	rtc_facade: wrtc_adapter,
-	rtc_config: { iceServers: [{urls: ["stun:stun.l.google.com:19302", "stun:stun.ekiga.net"] }] }
+	rtc_config: { iceServers: [{urls: ["stun:stun.l.google.com:19302", "stun:stun.ekiga.net"] }] },
+	callstats: null,
+	callstats_uID: "",
+	callstats_cID: ""
 };
 
 function WebRTCResourceManager(config){
@@ -72,6 +75,15 @@ function WebRTCResourceManager(config){
 					disconnectFired = true;
 					break;
 			}		
+		}
+
+		trConn._onNamed = function() {
+			if (this.config.callstats) {
+				this.config.callstats.addNewFabric(
+						conn, trConn.id, "data", this.config.callstats_cID
+					);
+				trConn.fabric = true;
+			}
 		}
 
 		if (this.config.timeout !== 0)
@@ -264,6 +276,15 @@ function WebRTCResourceManager(config){
 		if(!target && input.id)
 			target = _newConnection(input.id, channel, true);
 
+		const error = (fnName, error) => {
+			if (target.fabric)
+				this.config.callstats.reportError(
+					target.connection,
+					this.config.callstats_cID,
+					fnName,
+					error);
+		}
+
 		switch(input.type){
 			case(enums.RESPONSE_NONE):
 				break;
@@ -271,30 +292,41 @@ function WebRTCResourceManager(config){
 				console.log("ICE candidate picked up by manager.");
 				target.connection.addIceCandidate(new this.config.rtc_facade.RTCIceCandidate(data))
 					.then(
-					  	result => console.log("Successfully added ICE candidate to connection "+input.id),
-					  	reason => console.log("Unsuccessful in adding ICE candidate to connection "+input.id+": "+reason)
+						result => console.log("Successfully added ICE candidate to connection "+input.id),
+						reason => {
+							console.log("Unsuccessful in adding ICE candidate to connection "+input.id+": "+reason);
+							error("addIceCandidate", reason);
+						}
 					);
 				break;
 			case(enums.RESPONSE_SDP_OFFER):
 				console.log("SDP offer picked up by manager.")
 				target.connection.setRemoteDescription(new this.config.rtc_facade.RTCSessionDescription(data))
-					.then((res) => {
-						return target.connection.createAnswer()
-					})
-					.then((res) => {
-						return target.connection.setLocalDescription(res)
-					})
+					.then(res => {
+							return target.connection.createAnswer()
+						}, reason => error("setRemoteDescription", reason)
+					)
+					.then(res => {
+							return target.connection.setLocalDescription(res)
+						}, reason => error("createAnswer", reason)
+					)
 					.then(
 						result => channel.send(input.id, enums.MSG_SDP_ANSWER, target.connection.localDescription),
-						reason => {throw new Error("Failed to respond to SDP offer: "+reason);}
+						reason => {
+							console.log("Failed to respond to SDP offer: "+reason);
+							error("setLocalDescription", reason)
+						}
 					);
 				break;
 			case(enums.RESPONSE_SDP_ANSWER):
 				console.log("SDP answer picked up by manager.");
 				target.connection.setRemoteDescription(new this.config.rtc_facade.RTCSessionDescription(data))
 				.then(
-					  	result => console.log("Successfully added SDP Answer to connection "+input.id),
-					  	reason => console.log("Unsuccessful in adding SDP Answer to connection "+input.id+": "+reason)
+						result => console.log("Successfully added SDP Answer to connection "+input.id),
+						reason => {
+							console.log("Unsuccessful in adding SDP Answer to connection "+input.id+": "+reason);
+							error("setRemoteDescription", reason);
+						}
 					);
 				break;
 			default:
@@ -329,6 +361,13 @@ function WebRTCResourceManager(config){
 		item.id = newName;
 
 		delete this._connectionRegistry[oldName];
+	}
+
+	this.confirmNameConnection = (name) => {
+		let item = this._connectionRegistry[name];
+		
+		if (item._onNamed)
+			item._onNamed();
 	}
 
 	this.reject = (name, reason) => {
@@ -385,6 +424,8 @@ function TrackedConnection(id, rtcConn){
 	this.dataChannels = {
 		__default: null
 	};
+
+	this.fabric = false;
 
 	// this.openStatus = "closed";
 
