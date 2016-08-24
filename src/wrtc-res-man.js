@@ -77,7 +77,7 @@ function WebRTCResourceManager(config){
 			}		
 		}
 
-		trConn._onNamed = function() {
+		trConn._onNamed = () => {
 			if (this.config.callstats) {
 				this.config.callstats.addNewFabric(
 						conn, trConn.id, "data", this.config.callstats_cID
