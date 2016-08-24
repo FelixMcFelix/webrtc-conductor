@@ -363,7 +363,7 @@ function WebRTCResourceManager(config){
 		delete this._connectionRegistry[oldName];
 	}
 
-	this.confirmNameConnection = (name) => {
+	this.confirmName = (name) => {
 		let item = this._connectionRegistry[name];
 		
 		if (item._onNamed)
