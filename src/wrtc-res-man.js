@@ -22,6 +22,8 @@ const defaultConfig = {
 	rtc_facade: wrtc_adapter,
 	rtc_config: { iceServers: [{urls: ["stun:stun.l.google.com:19302", "stun:stun.ekiga.net"] }] },
 	callstats: null,
+	callstats_app_id: 0,
+	callstats_app_secret: "",
 	callstats_uID: "",
 	callstats_cID: ""
 };
@@ -78,8 +80,8 @@ function WebRTCResourceManager(config){
 		}
 
 		trConn._onNamed = () => {
-			if (this.config.callstats) {
-				this.config.callstats.addNewFabric(
+			if (this.callstats) {
+				this.callstats.addNewFabric(
 						conn, trConn.id, "data", this.config.callstats_cID
 					);
 				trConn.fabric = true;
@@ -280,7 +282,7 @@ function WebRTCResourceManager(config){
 
 		const error = (fnName, error) => {
 			if (target.fabric)
-				this.config.callstats.reportError(
+				this.callstats.reportError(
 					target.connection,
 					this.config.callstats_cID,
 					fnName,
@@ -385,6 +387,14 @@ function WebRTCResourceManager(config){
 
 	// Initialisation code
 	this.config = _mergeConfig(defaultConfig, config);
+
+	// Initialise callstats, if given.
+	if (this.config.callstats)
+		this.callstats = this.config.callstats.initialise(
+			this.config.callstats_app_id,
+			this.config.callstats_app_secret,
+			this.config.callstats_cID
+		)
 
 	if(!_validateConfig(this.config))
 		throw new TypeError("An 'rtc_facade', 'rtc_config' and 'channel' must be defined for WebRTC to be used.");
