@@ -389,12 +389,14 @@ function WebRTCResourceManager(config){
 	this.config = _mergeConfig(defaultConfig, config);
 
 	// Initialise callstats, if given.
-	if (this.config.callstats)
-		this.callstats = this.config.callstats.initialize(
+	if (this.config.callstats) {
+		this.callstats = this.config.callstats;
+		this.callstats.initialize(
 			this.config.callstats_app_id,
 			this.config.callstats_app_secret,
 			this.config.callstats_cID
-		)
+		);
+	}
 
 	if(!_validateConfig(this.config))
 		throw new TypeError("An 'rtc_facade', 'rtc_config' and 'channel' must be defined for WebRTC to be used.");
