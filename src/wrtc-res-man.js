@@ -394,7 +394,7 @@ function WebRTCResourceManager(config){
 		this.callstats.initialize(
 			this.config.callstats_app_id,
 			this.config.callstats_app_secret,
-			this.config.callstats_cID
+			this.config.callstats_uID
 		);
 	}
 
