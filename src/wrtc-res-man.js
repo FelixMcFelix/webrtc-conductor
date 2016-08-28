@@ -390,7 +390,7 @@ function WebRTCResourceManager(config){
 
 	// Initialise callstats, if given.
 	if (this.config.callstats)
-		this.callstats = this.config.callstats.initialise(
+		this.callstats = this.config.callstats.initialize(
 			this.config.callstats_app_id,
 			this.config.callstats_app_secret,
 			this.config.callstats_cID
