@@ -273,8 +273,10 @@ function WebRTCResourceManager(config){
 			target = _lookupConnection(input.id),
 			data = input.data;
 
-		if(!target && input.id)
+		if(!target && input.id) {
 			target = _newConnection(input.id, channel, true);
+			this.confirmName(input.id);
+		}
 
 		const error = (fnName, error) => {
 			if (target.fabric)
